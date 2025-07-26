@@ -1,8 +1,5 @@
-# test_utils.py
-
 import unittest
 import utils
-
 
 class TestUtils(unittest.TestCase):
 
