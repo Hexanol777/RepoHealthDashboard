@@ -3,7 +3,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import matplotlib.pyplot as plt
 
 from github_api import (
     get_repo_stats,
@@ -22,7 +21,6 @@ from utils import (
     summarize_languages
 )
 
-
 st.set_page_config(page_title="GitHub Repo Health Dashboard", layout="wide")
 st.title("📊 GitHub Repo Health Dashboard")
 
@@ -40,10 +38,9 @@ if repo_name:
         releases = get_releases(repo_name)
         languages = get_languages(repo_name)
 
-    st.markdown("---")
-
     # ─────────────────────────────────────────────────────────────────────
-    # 🔢 Top-level KPIs
+    st.markdown("---")
+    st.subheader("📌 Repository Overview")
     col1, col2, col3 = st.columns(3)
     if stats:
         col1.metric("⭐ Stars", stats["stars"])
@@ -51,59 +48,62 @@ if repo_name:
         col3.metric("🐞 Open Issues", stats["open_issues"])
 
     # ─────────────────────────────────────────────────────────────────────
-    # 📈 Commits per Week (Last 52 Weeks)
+    st.markdown("---")
+    st.subheader("🕒 Weekly Commit Activity")
     if commits:
         df_commits = pd.DataFrame(commits)
         df_commits["week"] = pd.to_datetime(df_commits["week"], unit="s")
-        fig_commits = px.bar(df_commits, x="week", y="total", title="🕒 Weekly Commits (Past Year)")
+        fig_commits = px.bar(df_commits, x="week", y="total", title="Commits Per Week (Last 52 Weeks)")
         st.plotly_chart(fig_commits, use_container_width=True)
 
     # ─────────────────────────────────────────────────────────────────────
-    # 👥 Contributors Pie Chart
+    st.markdown("---")
+    st.subheader("👥 Top Contributors")
     if contributors:
-        df_contribs = pd.DataFrame(contributors)
-        df_contribs = df_contribs.sort_values("contributions", ascending=False).head(10)
+        df_contribs = pd.DataFrame(contributors).sort_values("contributions", ascending=False).head(10)
         fig_contribs = px.pie(df_contribs, names="login", values="contributions", title="Top 10 Contributors")
         st.plotly_chart(fig_contribs, use_container_width=True)
 
     # ─────────────────────────────────────────────────────────────────────
-    # 🧮 Issue Resolution Time
+    st.markdown("---")
+    st.subheader("📬 Issues & Pull Requests")
+    col4, col5 = st.columns(2)
     avg_resolution = calc_issue_resolution_time(issues)
     if avg_resolution is not None:
-        st.metric("🕓 Avg Issue Resolution Time", f"{avg_resolution} days")
+        col4.metric("🕓 Avg Issue Resolution Time", f"{avg_resolution} days")
 
-    # ─────────────────────────────────────────────────────────────────────
-    # 📬 Pull Request Merge Ratio
     pr_merge_ratio = calc_pr_merge_ratio(prs)
     if pr_merge_ratio is not None:
-        st.metric("✅ PR Merge Ratio", f"{pr_merge_ratio}%")
+        col5.metric("✅ PR Merge Ratio", f"{pr_merge_ratio}%")
 
     # ─────────────────────────────────────────────────────────────────────
-    # 📦 Releases Per Month
+    st.markdown("---")
+    st.subheader("📦 Releases Over Time")
     release_counts = count_releases_per_month(releases)
     if release_counts:
         df_releases = pd.DataFrame({
             "Month": list(release_counts.keys()),
             "Releases": list(release_counts.values())
-        })
-        df_releases = df_releases.sort_values("Month")
-        fig_releases = px.bar(df_releases, x="Month", y="Releases", title="📅 Releases per Month")
+        }).sort_values("Month")
+        fig_releases = px.bar(df_releases, x="Month", y="Releases", title="Monthly Release Frequency")
         st.plotly_chart(fig_releases, use_container_width=True)
 
     # ─────────────────────────────────────────────────────────────────────
-    # 🧠 Languages Used
+    st.markdown("---")
+    st.subheader("🧠 Languages Used")
     lang_summary = summarize_languages(languages)
     if lang_summary:
         df_langs = pd.DataFrame(lang_summary)
-        fig_langs = px.pie(df_langs, names="language", values="percent", title="🧠 Codebase Language Breakdown")
+        fig_langs = px.pie(df_langs, names="language", values="percent", title="Language Breakdown by Bytes")
         st.plotly_chart(fig_langs, use_container_width=True)
 
     # ─────────────────────────────────────────────────────────────────────
-    # ✅ Repo Health Index (Bonus)
+    st.markdown("---")
+    st.subheader("📈 Repo Health Index")
     if avg_resolution and pr_merge_ratio and release_counts:
         health_score = (
             (100 - min(avg_resolution, 100)) * 0.3 +
             min(pr_merge_ratio, 100) * 0.3 +
-            min(len(release_counts), 12) * 8.3  # Max 12 months = 100%
+            min(len(release_counts), 12) * 8.3
         )
-        st.metric("🧪 Repo Health Index", f"{round(health_score, 1)} / 100")
+        st.metric("🧪 Health Score", f"{round(health_score, 1)} / 100")
