@@ -101,9 +101,14 @@ if repo_name:
     st.markdown("---")
     st.subheader("📈 Repo Health Index")
     if avg_resolution and pr_merge_ratio and release_counts:
+        # Clean cap logic
+        release_score = min(sum(release_counts.values()) / 12 * 100, 100)  # Normalize to 12 releases/year
+        pr_score = min(pr_merge_ratio, 100)
+        issue_score = max(0, 100 - min(avg_resolution, 100))  # Lower resolution time is better
+        
         health_score = (
-            (100 - min(avg_resolution, 100)) * 0.3 +
-            min(pr_merge_ratio, 100) * 0.3 +
-            min(len(release_counts), 12) * 8.3
+            issue_score * 0.3 +
+            pr_score * 0.3 +
+            release_score * 0.4
         )
         st.metric("🧪 Health Score", f"{round(health_score, 1)} / 100")
