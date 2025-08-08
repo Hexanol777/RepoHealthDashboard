@@ -3,16 +3,15 @@ from datetime import datetime
 import re
 import time
 import os
+import streamlit as st
+
 
 BASE_URL = "https://api.github.com"
 
 
-from dotenv import load_dotenv
-load_dotenv()
-
 HEADERS = {
     "Accept": "application/vnd.github+json",
-    "Authorization": f"Bearer {os.getenv('GITHUB_TOKEN')}"
+    "Authorization": f"Bearer {st.secrets['GITHUB_TOKEN']}"
 }
 
 def normalize_repo_input(user_input):
