@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 
 from github_api import (
+    normalize_repo_input,
     get_repo_stats,
     get_contributors,
     get_commit_activity,
@@ -26,7 +27,10 @@ st.title("📊 GitHub Repo Health Dashboard")
 
 # ─────────────────────────────────────────────────────────────────────
 # 📥 User input
-repo_name = st.text_input("Enter a repository (e.g. streamlit/streamlit)", value="streamlit/streamlit")
+user_input = st.text_input("Enter a repository (e.g. streamlit/streamlit)", value="streamlit/streamlit")
+repo_name = normalize_repo_input(user_input)
+
+
 
 if repo_name:
     with st.spinner("Fetching repository data..."):
@@ -112,3 +116,7 @@ if repo_name:
             release_score * 0.4
         )
         st.metric("🧪 Health Score", f"{round(health_score, 1)} / 100")
+
+else:
+    st.error("❌ Repository not found. Please check the name.")
+

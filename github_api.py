@@ -1,5 +1,7 @@
 import requests
 from datetime import datetime
+import re
+
 
 BASE_URL = "https://api.github.com"
 
@@ -8,6 +10,26 @@ HEADERS = {
     # Optional: add your token for higher rate limits
     # "Authorization": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
 }
+
+def normalize_repo_input(user_input):
+    user_input = user_input.strip()
+
+    # Case 1: Full GitHub URL
+    match = re.search(r"github\.com/([^/]+/[^/]+)", user_input)
+    if match:
+        return match.group(1)
+
+    # Case 2: Already owner/repo
+    if "/" in user_input:
+        return user_input
+
+    # Case 3: Single repo name -> search GitHub for most popular match
+    search_url = f"https://api.github.com/search/repositories?q={user_input}&sort=stars&order=desc"
+    res = requests.get(search_url, headers={"Accept": "application/vnd.github+json"})
+    if res.ok and res.json()["items"]:
+        return res.json()["items"][0]["full_name"]  # owner/repo
+
+    return None  # No match found
 
 
 def get_repo_stats(repo):
