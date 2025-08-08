@@ -1,14 +1,16 @@
 import requests
 from datetime import datetime
 import re
+import time
 
 
 BASE_URL = "https://api.github.com"
 
+GIT_API_KEY = "HERE"
+
 HEADERS = {
     "Accept": "application/vnd.github+json",
-    # Optional: add your token for higher rate limits
-    # "Authorization": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+    "Authorization": f"Bearer {GIT_API_KEY}"
 }
 
 def normalize_repo_input(user_input):
@@ -53,11 +55,18 @@ def get_contributors(repo):
     return res.json() if res.ok else None
 
 
-def get_commit_activity(repo):
-    """Returns weekly commit activity (last 52 weeks)."""
+def get_commit_activity(repo, retries=3, delay=2):
+    """Returns weekly commit activity (last 52 weeks). Retries if GitHub returns 202."""
     url = f"{BASE_URL}/repos/{repo}/stats/commit_activity"
-    res = requests.get(url, headers=HEADERS)
-    return res.json() if res.ok else None
+    for attempt in range(retries):
+        res = requests.get(url, headers=HEADERS)
+        if res.status_code == 202:
+            time.sleep(delay)  # Wait for GitHub to generate stats
+            continue
+        if res.ok:
+            return res.json()
+        break
+    return None
 
 
 def get_issues(repo, state="all", per_page=100, max_pages=2):

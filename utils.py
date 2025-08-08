@@ -48,3 +48,24 @@ def summarize_languages(lang_dict):
         key=lambda x: x["percent"],
         reverse=True
     )
+
+
+def count_open_closed_issues(issues):
+    """Count open vs closed issues."""
+    open_count = sum(1 for i in issues if i.get("state") == "open")
+    closed_count = sum(1 for i in issues if i.get("state") == "closed")
+    return {"open": open_count, "closed": closed_count}
+
+
+def summarize_commits_per_week(commit_data):
+    """Summarize commits over time from commit_activity API."""
+    if not commit_data:
+        return []
+    return [{"week": c["week"], "commits": c["total"]} for c in commit_data]
+
+def top_contributors(contributors, top_n=8):
+    """Return top N contributors sorted by contributions."""
+    if not contributors:
+        return []
+    sorted_contribs = sorted(contributors, key=lambda x: x["contributions"], reverse=True)
+    return sorted_contribs[:top_n]
