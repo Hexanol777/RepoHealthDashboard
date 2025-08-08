@@ -19,7 +19,10 @@ from utils import (
     calc_issue_resolution_time,
     calc_pr_merge_ratio,
     count_releases_per_month,
-    summarize_languages
+    summarize_languages,
+    count_open_closed_issues,
+    summarize_commits_per_week,
+    top_contributors
 )
 
 st.set_page_config(page_title="GitHub Repo Health Dashboard", layout="wide")
@@ -31,12 +34,11 @@ user_input = st.text_input("Enter a repository (e.g. streamlit/streamlit)", valu
 repo_name = normalize_repo_input(user_input)
 
 
-
 if repo_name:
     with st.spinner("Fetching repository data..."):
         stats = get_repo_stats(repo_name)
         contributors = get_contributors(repo_name)
-        commits = get_commit_activity(repo_name)
+        commits = get_commit_activity(repo_name)  # retry-safe version
         issues = get_issues(repo_name, state="all")
         prs = get_pull_requests(repo_name, state="all")
         releases = get_releases(repo_name)
@@ -55,16 +57,18 @@ if repo_name:
     st.markdown("---")
     st.subheader("🕒 Weekly Commit Activity")
     if commits:
-        df_commits = pd.DataFrame(commits)
-        df_commits["week"] = pd.to_datetime(df_commits["week"], unit="s")
-        fig_commits = px.bar(df_commits, x="week", y="total", title="Commits Per Week (Last 52 Weeks)")
-        st.plotly_chart(fig_commits, use_container_width=True)
+        weekly_data = summarize_commits_per_week(commits)
+        if weekly_data:
+            df_commits = pd.DataFrame(weekly_data)
+            df_commits["week"] = pd.to_datetime(df_commits["week"], unit="s")
+            fig_commits = px.bar(df_commits, x="week", y="commits", title="Commits Per Week (Last 52 Weeks)")
+            st.plotly_chart(fig_commits, use_container_width=True)
 
     # ─────────────────────────────────────────────────────────────────────
     st.markdown("---")
     st.subheader("👥 Top Contributors")
     if contributors:
-        df_contribs = pd.DataFrame(contributors).sort_values("contributions", ascending=False).head(10)
+        df_contribs = pd.DataFrame(top_contributors(contributors))
         fig_contribs = px.pie(df_contribs, names="login", values="contributions", title="Top 10 Contributors")
         st.plotly_chart(fig_contribs, use_container_width=True)
 
@@ -72,13 +76,26 @@ if repo_name:
     st.markdown("---")
     st.subheader("📬 Issues & Pull Requests")
     col4, col5 = st.columns(2)
+
+    # Issue resolution time
     avg_resolution = calc_issue_resolution_time(issues)
     if avg_resolution is not None:
         col4.metric("🕓 Avg Issue Resolution Time", f"{avg_resolution} days")
 
+    # PR merge ratio
     pr_merge_ratio = calc_pr_merge_ratio(prs)
     if pr_merge_ratio is not None:
         col5.metric("✅ PR Merge Ratio", f"{pr_merge_ratio}%")
+
+    # Open vs Closed issues chart
+    issue_counts = count_open_closed_issues(issues)
+    if issue_counts:
+        df_issues = pd.DataFrame({
+            "State": ["Open", "Closed"],
+            "Count": [issue_counts["open"], issue_counts["closed"]]
+        })
+        fig_issues = px.bar(df_issues, x="State", y="Count", title="Open vs Closed Issues", color="State", barmode="group")
+        st.plotly_chart(fig_issues, use_container_width=True)
 
     # ─────────────────────────────────────────────────────────────────────
     st.markdown("---")
@@ -105,18 +122,14 @@ if repo_name:
     st.markdown("---")
     st.subheader("📈 Repo Health Index")
     if avg_resolution and pr_merge_ratio and release_counts:
-        # Clean cap logic
-        release_score = min(sum(release_counts.values()) / 12 * 100, 100)  # Normalize to 12 releases/year
+        release_score = min(sum(release_counts.values()) / 12 * 100, 100)
         pr_score = min(pr_merge_ratio, 100)
-        issue_score = max(0, 100 - min(avg_resolution, 100))  # Lower resolution time is better
-        
+        issue_score = max(0, 100 - min(avg_resolution, 100))
+
         health_score = (
             issue_score * 0.3 +
             pr_score * 0.3 +
             release_score * 0.4
         )
         st.metric("🧪 Health Score", f"{round(health_score, 1)} / 100")
-
-else:
-    st.error("❌ Repository not found. Please check the name.")
 
