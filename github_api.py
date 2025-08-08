@@ -2,15 +2,17 @@ import requests
 from datetime import datetime
 import re
 import time
-
+import os
 
 BASE_URL = "https://api.github.com"
 
-GIT_API_KEY = "HERE"
+
+from dotenv import load_dotenv
+load_dotenv()
 
 HEADERS = {
     "Accept": "application/vnd.github+json",
-    "Authorization": f"Bearer {GIT_API_KEY}"
+    "Authorization": f"Bearer {os.getenv('GITHUB_TOKEN')}"
 }
 
 def normalize_repo_input(user_input):
