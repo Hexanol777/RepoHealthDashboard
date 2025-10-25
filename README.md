@@ -8,15 +8,15 @@ A real-time, interactive dashboard built with [Streamlit](https://streamlit.io) 
 
 ## Features
 
-- 📥 Input any GitHub repo (e.g., `streamlit/streamlit`)
-- ⭐ View repository stats: stars, forks, open issues
-- 🕒 Weekly commit activity (last 52 weeks)
-- 👥 Top contributors breakdown
-- 🛠 Issue resolution time calculation
-- ✅ Pull request merge ratio
-- 📦 Monthly release frequency
-- 🧠 Language usage breakdown (bytes of code)
-- 📈 Custom Repo Health Index (0–100)
+- Input any GitHub repo (e.g., `streamlit/streamlit`)
+- View repository stats: stars, forks, open issues
+- Weekly commit activity (last 52 weeks)
+- Top contributors breakdown
+- Issue resolution time calculation
+- Pull request merge ratio
+- Monthly release frequency
+- Language usage breakdown (bytes of code)
+- Custom Repo Health Index (0–100)
 
 ---
 
