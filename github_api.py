@@ -35,6 +35,7 @@ def normalize_repo_input(user_input):
     return None  # No match found
 
 
+@st.cache_data(ttl=3600)
 def get_repo_stats(repo):
     """Returns stars, forks, open issues."""
     url = f"{BASE_URL}/repos/{repo}"
@@ -49,6 +50,7 @@ def get_repo_stats(repo):
     return None
 
 
+@st.cache_data(ttl=3600)
 def get_contributors(repo):
     """Returns top contributors with commit count."""
     url = f"{BASE_URL}/repos/{repo}/contributors"
@@ -56,6 +58,7 @@ def get_contributors(repo):
     return res.json() if res.ok else None
 
 
+@st.cache_data(ttl=3600)
 def get_commit_activity(repo, retries=3, delay=2):
     """Returns weekly commit activity (last 52 weeks). Retries if GitHub returns 202."""
     url = f"{BASE_URL}/repos/{repo}/stats/commit_activity"
@@ -70,6 +73,7 @@ def get_commit_activity(repo, retries=3, delay=2):
     return None
 
 
+@st.cache_data(ttl=3600)
 def get_issues(repo, state="all", per_page=100, max_pages=2):
     """Returns issues (open or closed). Use max_pages to limit calls."""
     issues = []
@@ -84,6 +88,7 @@ def get_issues(repo, state="all", per_page=100, max_pages=2):
     return issues
 
 
+@st.cache_data(ttl=3600)
 def get_pull_requests(repo, state="all", per_page=100, max_pages=2):
     """Returns PRs and metadata."""
     prs = []
@@ -98,6 +103,7 @@ def get_pull_requests(repo, state="all", per_page=100, max_pages=2):
     return prs
 
 
+@st.cache_data(ttl=3600)
 def get_releases(repo):
     """Returns list of releases with dates."""
     url = f"{BASE_URL}/repos/{repo}/releases"
@@ -105,6 +111,7 @@ def get_releases(repo):
     return res.json() if res.ok else None
 
 
+@st.cache_data(ttl=3600)
 def get_languages(repo):
     """Returns dictionary of languages used and bytes of code."""
     url = f"{BASE_URL}/repos/{repo}/languages"
