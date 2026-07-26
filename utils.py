@@ -63,9 +63,49 @@ def summarize_commits_per_week(commit_data):
         return []
     return [{"week": c["week"], "commits": c["total"]} for c in commit_data]
 
+
 def top_contributors(contributors, top_n=8):
     """Return top N contributors sorted by contributions."""
     if not contributors:
         return []
     sorted_contribs = sorted(contributors, key=lambda x: x["contributions"], reverse=True)
     return sorted_contribs[:top_n]
+
+
+def calculate_bus_factor(contributors):
+    """
+    Analyze contributor concentration risk (the 'bus factor').
+
+    Returns a dict with:
+        top1_login   - GitHub login of the #1 contributor
+        top1_pct     - % of total commits by the top contributor
+        top2_pct     - % of total commits by the top 2 contributors combined
+        is_critical  - True when top1_pct > 75 (single point of failure)
+
+    Returns None if the contributors list is empty or has zero total contributions.
+    """
+    if not contributors:
+        return None
+
+    total = sum(c.get("contributions", 0) for c in contributors)
+    if total == 0:
+        return None
+
+    sorted_contribs = sorted(
+        contributors, key=lambda x: x.get("contributions", 0), reverse=True
+    )
+
+    top1_contributions = sorted_contribs[0].get("contributions", 0)
+    top1_pct = round(top1_contributions / total * 100, 2)
+
+    top2_contributions = top1_contributions
+    if len(sorted_contribs) > 1:
+        top2_contributions += sorted_contribs[1].get("contributions", 0)
+    top2_pct = round(top2_contributions / total * 100, 2)
+
+    return {
+        "top1_login": sorted_contribs[0].get("login", "Unknown"),
+        "top1_pct": top1_pct,
+        "top2_pct": top2_pct,
+        "is_critical": top1_pct > 75,
+    }
