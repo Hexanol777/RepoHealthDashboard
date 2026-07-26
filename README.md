@@ -2,7 +2,7 @@
 
 A real-time, interactive dashboard built with [Streamlit](https://streamlit.io) that analyzes the health and activity of any public GitHub repository using the GitHub REST API.
 
-![demo](https://gitrepohealthdashboard.streamlit.app/)
+[demo](https://gitrepohealthdashboard.streamlit.app/)
 
 ---
 
